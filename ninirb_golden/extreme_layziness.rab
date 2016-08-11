@@ -1,0 +1,135 @@
+= 開発時の探し物を楽にする習慣作り
+
+: content-source
+  西日暮里.rb ゴールデンだよLT大会
+: place
+  秋葉原UDX 弥生株式会社さま
+: date
+  2016-04-28 (Thu)
+: author
+  伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= 今日の話
+
+  * iTerm2 内での生活
+  * 私の (Rubyの) 開発環境
+    * https://github.com/koic/dotfiles
+  * 旅の途中
+
+= いまの装備
+
+  * Emacs
+    * パッケージ管理は El-Get 派
+      * Cask と package.el が対抗で悩んだ
+  * bash
+    * さすがに zsh か fish に移るかー
+  * screen
+
+= dotfilesを公開する
+
+  * 惰性でGitHubに行く習慣作り
+    * 何かを毎日コミットする
+    * 他の人のdotfilesに興味を持つ
+
+= dotfilesを更新する
+
+  * 「こんな感じで楽になる設定ないかなー」
+    * "Emacs 設定 おすすめ" [検索] でggr
+    * 堕落はプログラマーとしての美徳
+  * 草も生えて環境も良くなって少なくとも2度美味しい
+
+= たくさんの探し物
+
+  * ファイル名、ディレクトリ名、特定のファイルの中の名前 (クラス名、メソッド名、変数名など...)
+  * ((*名付いた何か*))
+
+= 候補から絞り込み選択する
+
+  * peco
+    * gitのブランチやshellの履歴など
+  * enhancd
+  * helm (旧 anything.el)
+    * helm-ls-gitやhelm-ag等のhelm族
+  * recentf
+    * Emacs複数起動はsync-recentf大事
+
+= Don't Repeat Yourself
+
+  * あまり特定環境に依存しない enhancd を例にします
+    * (時間があればデモする)
+    * さらに Fuzzy search は強力
+
+= 1回目の探し方
+
+ある程度の手間隙。手を掛ける一例。
+
+  # coderay sh
+  $ ls ディレクトリに何があったかな？
+  $ cd 移動しよう [タブ補完] (繰り返し)
+
+1回目に弾丸を浴びるのはある程度仕方ない。
+
+= 2回目以降の探し方
+
+操作履歴が使えるはず。
+
+  # coderay sh
+  $ cd 移動したいパスのキーワード
+
+履歴からキーワードで絞り込む。
+同じ弾丸を浴びない。
+
+= 楽は正義
+
+= ゴールデンな環境を求めて
+
+  * Readline short-cut
+  * peco
+  * C-r -> with peco
+    * "コマンド履歴 peco bash" [検索] でggr
+  * enhancd
+  * helm
+
+= 風聞
+
+毎月平均1人1時間半もの時間を探し物に費やしていると言われているらしい。
+
+#= たぶんプログラマーはもっと探し物をしている
+
+= プログラマーの三大美徳
+
+ # blockquote
+ # title=プログラミングPerl
+ 怠惰、短気、傲慢
+
+= eXtreme Layziness
+
+堕落するためにちょっと頑張る。
+
+= おまけ
+
+検索で英字とひらがなの入力切り替えに疲れた日本人は migemo を使うと良いですよ。
+
+#= ((' '))
+#
+#  # image
+#  # src = images/esminc.png
+#  # relative_height = 115
