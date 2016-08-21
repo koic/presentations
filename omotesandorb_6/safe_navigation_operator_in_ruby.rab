@@ -1,0 +1,223 @@
+= try! から .? へ (#11537)
+
+: content-source
+   表参道.rb#6
+: place
+   東京糸井重里事務所さま
+: date
+   2015-11-04
+: author
+   伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= About Me
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+#= 2015.12.11 (Fri)
+#= 2015.12.11@Shiodome
+= Come and Join Us
+
+  # image
+  # src = images/drinkup_sponsor_on_rubykaigi_2015.png
+  # relative_height = 85
+
+= Today's Topic
+
+  * Safe navigation operator
+  * Ruby 2.3.0 に入る有力な Language Changes のひとつ
+    * 最新の情報は https://bugs.ruby-lang.org などをご参照ください
+#  * ?や!が多めのプレゼンです
+  * ((*[2015.11.06追記] まだ議論中の内容を取り扱っており、記法など変わる可能性があります*))
+
+#= まだ残像が見えることも
+#= 残像......だと......
+= 2.3.0-dev
+
+  # image
+  # src = images/ruby-committers.png
+  # relative_height = 100
+
+= Safe navigation operator
+
+  * obj.?foo という呼び出し方で、Active Support の try! に似た振る舞いをする
+    * obj.try! {} 相当のブロック付き呼び出しはできないなど違いはある
+  * . のバリエーションとしての .? と捉えると良さそう
+
+= Other Languages
+
+  * Groovy や Swift, C# 6.0 に相当の機能があるらしい (風聞)
+  * 他の言語の ?. と .? は似ている？
+  * Ruby ではメソッド名の最後に ? を付けられるため ?. は使えず ?.
+    * 他の言語と逆なので注意
+
+= どう書く？
+
+  * 上がActive Supportのtry!で、下がSafe navigation operator
+
+  # coderay ruby
+  artist.try!(:name)
+
+  artist.?name
+
+= Railsむかし話
+
+  * Safe navigation operator の振る舞いは try! の方に似てる
+    * Rails 4 で try の動きが変わって try! が導入されている
+    * Rails 3 の try をアンラーニングされず (?) 、名残りで try を使っているコードをちらほら
+
+= try と try! (Rails 3)
+
+try! メソッドはそもそも存在せず
+
+ # coderay ruby
+ > Rails.version
+ => "3.2.22"
+
+ > nil.try(:non_existing_method)
+ => nil
+
+ > 'hi'.try(:non_existing_method)
+ NoMethodError: undefined method `non_existing_method' for "hi":String
+
+ > nil.try!(:non_existing_method)
+ NoMethodError: undefined method `try!' for nil:NilClass
+
+ > 'hi'.try!(:non_existing_method)
+ NoMethodError: undefined method `try!' for "hi":String
+
+= try と try! (Rails 4)
+
+try メソッドの振る舞いは変わる
+
+ # coderay ruby
+ > Rails.version
+ => "4.2.4"
+
+ > nil.try(:non_existing_method)
+ => nil
+
+ > 'hi'.try(:non_existing_method)
+ => nil
+
+ > nil.try!(:non_existing_method)
+ => nil
+
+ > 'hi'.try!(:non_existing_method)
+ NoMethodError: undefined method `non_existing_method' for "hi":String
+
+= Safe navigation operator
+
+Rails 3 の try あるいは Rails 4 の try! に似た感じになる
+
+ # coderay ruby
+ > RUBY_VERSION
+ => "2.3.0"
+
+ > nil.?non_existing_method
+ => nil
+
+ > 'hi'.?non_existing_method
+ NoMethodError: undefined method `non_existing_method' for "hi":String
+
+= Active Support による try のおさらい
+
+  * Rails 4 での Active Support のコードを見てみましょう
+
+= Rails 4 での try の実装
+
+  # coderay ruby
+  def try(*a, &b)
+    try!(*a, &b) if a.empty? || respond_to?(a.first)
+  end
+
+= try の実装を見て
+
+  * 条件に一致しない場合は nil が返る。つまり respond_to? に反応するメソッドがなければ nil が返る
+  * つまりレシーバに対応するメソッドがあってもなくても動く
+  * それを期待していることはあまりないのでは？
+
+= Rails 4 での try! の実装
+
+  # coderay ruby
+  def try!(*a, &b)
+    if a.empty? && block_given?
+      if b.arity.zero?
+        instance_eval(&b)
+      else
+        yield self
+      end
+    else
+      public_send(*a, &b)
+    end
+  end
+
+= try! の実装を見て
+
+  * try と異なり respond_to? は見ていないので、メソッドがなければエラーになる
+
+= あれ?(一瞬分からなくなる)
+
+  * try! はレシーバに存在しないメソッド呼び出しをしたらエラーになる
+  * nil への対応のはずなのに、nil にないメソッドを呼んだらエラーになるよね？
+
+= Method#source_location を使った解析
+
+メソッドの定義場所が違うらしい
+
+ # coderay ruby
+ > 'hi'.method(:try).source_location
+ => ["(略)/active_support/core_ext/object/try.rb", 62]
+
+ > nil.method(:try).source_location
+ => ["(略)/active_support/core_ext/object/try.rb", 93]
+
+#= try.rb の nil 用の実装
+= nil 専用の try 実装
+
+try.rb にレシーバ nil 専用の振る舞いがある
+
+ # coderay ruby
+ class NilClass
+   def try(*args)
+     nil
+   end
+
+   def try!(*args)
+     nil
+   end
+ end
+
+= まとめ
+
+  * 上がActive Supportのtry!で、下がSafe navigation operator
+
+  # coderay ruby
+  artist.try!(:name)
+
+  artist.?name
+
+= 考えられる移行
+
+  * 期待しているメソッドが存在している前提で戻り値が nil の場合を想定しているケースにおいて、大体の場合は try ではなく try! が良さそう
+  * obj.try!(:foo) で良い場所は obj.?foo に置き換えてけそう
+
+= Safe navigation operator を試してみよう
+
+  rbenv install 2.3.0-dev
+
+= To be continued...
+
+  * https://bugs.ruby-lang.org/issues/11537
+  * https://github.com/ruby/ruby
+  * https://github.com/rails/rails
+#  * https://github.com/ruby/ruby/blob/a356fe1c3550892902103f66928426ac8279e072
+#  * https://github.com/ruby/ruby/blob/a356fe1c3550892902103f66928426ac8279e072/NEWS#L21
+#  * https://github.com/rails/rails/blob/v4.2.4/activesupport/lib/active_support/core_ext/object/try.rbを見ていきます
