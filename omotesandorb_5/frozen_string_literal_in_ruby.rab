@@ -1,0 +1,91 @@
+= About frozen string literal in Ruby
+
+: content-source
+   表参道.rb#5
+: place
+   Sansan株式会社さま
+: date
+   2015-10-01
+: author
+   伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= 今日の話
+
+RubyによるWebアプリケーション開発運用者への朗報です。
+
+= まとめ
+
+  * https://bugs.ruby-lang.org/issues/8976
+  * https://bugs.ruby-lang.org/issues/11473
+  * http://www.a-k-r.org/d/2015-09.html
+
+= Webアプリケーション
+
+  * リクエストごとにどれだけの文字列が生成される？
+
+= つまり
+
+GCだε=ε=((○`・v・)っ／ ┃ヽ(○`・v・) ｶﾞﾝﾊﾞﾙｿﾞ!! ワショ━ヽ(ﾟДﾟ)ﾉヽ(Дﾟ )ﾉヽ( )ﾉヽ( ﾟД)ﾉヽ(ﾟДﾟ)ﾉ━イ!! (ﾉ´∀｀)ﾉﾞGCだヽ(´∀｀ゞ)GCだ (*´∀｀)b GCだ♪ ﾜｯｼｮｲ♪(´∀)ﾉ━( ・ω)ﾉ━【☆*☆祭☆*☆】(´Д)ﾉ━(・∀)ﾉ━ﾜｯｼｮｲ♪ GCだ♪ヽ('∀')メ('∀')メ('∀')ノワッショイ♪
+
+= String#freeze
+
+オブジェクトの同一性 (Not 同値性) について
+
+ > 'foo'.equal? 'foo'
+ => false
+ > 'foo'.freeze.equal? 'foo'.freeze
+ => true
+
+= フレームワークやライブラリでの頑張り
+
+  # 以下のようなコードがいっぱいあると...
+  "performance improvement".freeze
+
+https://github.com/rails/rails/commit/5bb1d4d288d019e276335465d0389fd2f5246bfd など参照。
+
+= @amatsuda says...
+
+  # blockquote
+  # title = https://bugs.ruby-lang.org/issues/8976#note-30
+  This is not a Ruby way. Ruby code must be kept beautiful.
+
+= frozen string literal
+
+  * マジックコメントによるファイルスコープ
+  * コマンドラインオプションでも指定可 (ファイルスコープ優先)
+  * Ruby 2.3.0 で導入される
+    * 良さそうなら、Ruby 3 のデフォルトとなる
+
+= マジックコメント (pragma)
+
+ファイル先頭のマジックコメントで全体を有効/無効の指定が出来る。ファイル単位のファイルスコープとなる。
+
+ # -*- frozen-string-literal: true -*-
+
+trueをfalseにすれば無効。
+
+= コマンドオプション
+
+* Rubyコマンドのオプションで全体を有効/無効の指定が出来る。こちらよりもファイルスコープが優先される。
+* --enable-frozen-string-literal で有効。--disable-frozen-string-literal で無効。
+
+= frozen string literal を試してみよう
+
+  rbenv install 2.3.0-dev
+
+= リリーススケジュール
+
+* scheduled: 2015-12-25
+* https://bugs.ruby-lang.org/projects/ruby-trunk/wiki/ReleaseEngineering23
