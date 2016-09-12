@@ -1,0 +1,438 @@
+= スローテスト刑事 (デカ)
+
+: content-source
+  第74回 Ruby関西 勉強会
+: place
+  京都女子大学 C508
+: date
+  2016-09-11 (Sun)
+: author
+  伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= わたし
+
+(株)永和システムマネジメントで働く会社員。Rubyとかメタルとか好きです。
+
+* https://github.com/koic
+* https://twitter.com/koic
+* https://koic.hatenablog.com
+
+= ((' '))
+
+  # image
+  # src = images/ruby_kaigi_2016.png
+  # relative_height = 115
+
+= 御礼
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= 今日の話
+
+* Railsアプリケーションのスローテスト対策について
+* XP で伝えられる Testing と Continuous Integration への現実的課題点について考察
+* 現場での実践とポイント
+  * オンプレJenkins
+
+= まとめ
+
+  # image
+  # src = images/scale_out_scale_up.png
+  # relative_height = 100
+
+# https://twitter.com/koic/status/771268618822705152
+
+= Thanks (デカ部屋)
+
+* @1syo
+* @onk
+* @yattom
+
+= フルビルド何分ですか？
+
+= とあるアンケート
+
+  # blockquote
+  10分以内に抑えるようにしています
+
+= 10分という目標
+
+#= 現実
+
+#= ((*1時間越え*))
+
+= 目標と現実の差を知る
+
+= ある現実
+
+* だいたい3,795 examplesほど
+* ある時点で rake stats した
+  * Code LOC: 12796
+  * Test LOC: 23518
+  * Code to Test Ratio: 1:1.8
+* 素朴にテストを書いて実行とかだと1時間越え
+
+= 1時間越え
+
+* 24つのPull Requestが出たら1日の処理量を越える
+* というか翌朝出社しても終わらない
+* ないわー
+
+= 86,400
+
+= 時間の重み
+
+* 1日は86,400秒
+* 例えば60秒かかるスローテストが30つあると、
+* 一日に処理できるCIの上限は48つ以下
+  * チームは一日何回のコミットをしてますか？
+
+= 金を払いますか？労力を払いますか？
+
+= 最速での事件解決法
+
+* 札束で殴る
+* 潤沢な金と権力
+* お金がんばれ
+
+= 労力を金で解決する
+
+* 問題解決の基礎戦略のひとつ
+* 潤沢な金と権限のあるプロジェクトは動きやすい
+  * あまりそういったプロジェクトばかりでないのが現実
+  * 今日の話は制約の中でどうしていくか
+
+= スローテスト刑事 (デカ) の日常
+
+* テストの並列化と個別のチューンナップを頑張る
+* まるで靴底をすり減らした聞き込みのように地道な作業
+  * デカだからね
+
+= ((*TL;DR*))
+
+= ((*コアでスケールアウトしメモリでスケールアップする*))
+
+= 私のオススメ
+
+* 倍速レベルで速くなる並列化を初手にすると良い
+  * 投資対効果が高い
+* DBのデータファイルのメモリ化でディスクIO削減
+  * RDBMS自体のパフォーマンスが上がるわけではないので、20%の速度向上など一定比率で頭打ちはある
+
+= Topics
+
+* 1. Parallel
+* 2. DB
+* 3. Tips
+
+= 1.Parallel
+
+= Gemfileに以下を書いてbundle install (1/4)
+
+parallel_tests / test-queueといった並列化ライブラリがある。
+
+  # coderay ruby
+  gem 'parallel_tests', group: :development
+
+ここはparallel_testsを例にする。
+
+= 各種設定を並列対応 (2/4)
+
+データベースを並列分用意して、config/database.ymlを対応する
+
+  # coderay yaml
+  test:
+    database: yourproject_test<%= ENV['TEST_ENV_NUMBER'] %>
+
+* RDBMSに並列実行分のスキーマ (あるいはDB) を用意する
+
+# Oracle の場合
+#
+#  # coderay yaml
+#  test:
+#    username: yourproject_test<%= ENV['TEST_ENV_NUMBER'] %>
+
+= 並列分のスキーマ作成 (3/4)
+
+rake db:migrate の実行より rake db:schema:load の方が速いので意図がないならオススメ
+
+  # coderay sh
+  bundle exec parallel_test \
+  --exec 'rake db:schema:load RAILS_ENV=test' -n 4
+
+= テストの並列実行 (4/4)
+
+--suffixでテスト対象を絞り込んで見てみても良い。
+
+  RAILS_ENV=test bundle exec parallel_test \
+  spec --type rspec -n 4 --suffix '_spec.rb|.feature'
+
+= 効果
+
+* 4コア: 約1時間のテストが約15分になった。
+* 2コア: 約1時間のテストが約30分になった。
+
+= 共有リソースが容疑者
+
+* 基本的に個別のテストに手を入れず効果を得られる
+* Isolated Testの原則からそれぞれが影響しないはず
+* ((*Shared resourcesに気をつける*))
+  * 逆にいうとだいたいここくらい
+
+= 並列化まとめ
+
+* tmm1/test-queue, grosser/parallel_testsなどで並列化
+* 並列化するためデータベースや全文検索エンジンなどのリソースも並列可能にする
+* コアの数でほぼ頭打ちになるのでハイスペックのマシンが良い
+
+= 効果が高いので最初にやると良い
+
+# = キャッシュ先を変える
+#
+# そもそもFeature Specが遅い。Sass なんかのラッパー言語を使っている場合のコンパイル先を切り替える。
+#
+#  Rails.application.configure do
+#    config.cache_store = :memory_store # デフォルトは :file_store
+#  end
+#
+# そもそもJavaScriptが関わらないテストはRequest Specにしておいた方が良い派。
+#
+# https://moneyforward.com/engineers_blog/2015/03/27/improve_too_slow_feture_test/
+
+= 2. DB
+
+= データファイルのtmpfs搭載
+
+* RDBMSによるが2割減などが見込めたりするらしい
+* 一方でDisk IO減は思いのほか効いていない
+* というかこの間、Vagrantのパラメータやらtmpfs化と合わせてしておくREDOログの設定しくっててMac MiniのCI死んだ
+
+= Vagrantメモリ割当の変
+
+問題. この設定で vagrant reload してテストを流しました (配点2点)
+
+  # coderay ruby
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  -  vb.customize ["modifyvm", :id, "--memory", "12288"]
+  +  vb.customize ["modifyvm", :id, "--memory", "16384"]
+  end
+
+= まだ生傷が癒えていないので割愛
+
+= データベースのクリーニングを整理する
+
+* スローテストの原因は、だいたいデータベースがネック
+  * CI 実行もアプリケーションでの実行もボトルネックは同じ
+* amatsuda/database_rewinderというプロダクトもあるが、ここではDatabaseCleanerのお話
+
+= DatabaseCleaner.strategy
+
+= spec_helper.rb
+
+あるいはrails_helper.rbに以下があれば高速化の狙い目。
+
+  # coderay ruby
+  config.before(:each) do |example|
+    if example.metadata[:javascript]
+      DatabaseCleaner.strategy = :truncation, {except: MASTERS}
+    else
+      DatabaseCleaner.strategy = :transaction
+    end
+  end
+
+= DatabaseCleaner.strategyはできるだけtransactionに任せる
+
+データベースのデータ挿入と取得で異なるスレッドが現れるJavaScriptのテスト以外はtruncationではなく、同一スレッドで扱えるtransactionにする。
+
+= 容疑者探し
+
+example.metadata が手掛かり。
+
+ % grep -ro @javascript spec
+
+ % grep -ro @javascript spec | wc -l
+     138
+
+容疑者の絞り込みまで出来るとあとはやるだけなので割りと楽。
+
+= やること
+
+@javascriptを必要な場所に移す
+
+  # coderay ruby
+  -@javascript
+   フィーチャ: 遅いフィーチャ
+     シナリオ: JavaScirptを使わないシナリオ1
+        ...
+  +  @javascript
+     シナリオ: JavaScriptを使うシナリオ
+        ...
+     シナリオ: JavaScirptを使わないシナリオ2
+        ...
+
+# https://blog.kazu69.net/2015/01/14/set-of-writing-multi-threaded-tests-in-rails/
+
+= 効果 1 BEFORE
+
+  Finished in 50.63 seconds (files took 7.32 seconds to load)
+  10 examples, 0 failures
+
+= 効果 1 AFTER
+
+  Finished in 31.74 seconds (files took 6.31 seconds to load)
+  10 examples, 0 failures
+
+= 効果 2 BEFORE
+
+ Finished in 11.65 seconds (files took 7.29 seconds to load)
+ 6 examples, 0 failures
+
+= 効果 2 AFTER
+
+ Finished in 4.62 seconds (files took 7.19 seconds to load)
+ 6 examples, 0 failures
+
+= 効果 3 BEFORE
+
+ Finished in 51.63 seconds (files took 7.36 seconds to load)
+ 16 examples, 0 failures
+
+= 効果 3 AFTER
+
+ Finished in 33.91 seconds (files took 7.21 seconds to load)
+ 16 examples, 0 failures
+
+= 効果 4 BEFORE
+
+ Finished in 17.75 seconds (files took 7.58 seconds to load)
+ 5 examples, 0 failures
+
+= 効果 4 AFTER
+
+ Finished in 8.65 seconds (files took 7.23 seconds to load)
+ 5 examples, 0 failures
+
+= 全体効果
+
+* 約40分のテストが35分になった。
+  * 9%ほど削減
+
+== ポイント
+
+盲目的にフィーチャに @javascript を付けず、必要なシナリオだけ @javascript とする
+(ケチ臭い話ではありますが、足を使ってだな)
+
+= あとは地道に細かいチューニング
+
+* 投資対効果が高いテストからチューニングしていく
+
+= 3.Tips
+
+= プロファイリング
+
+推測するな、計測せよ (--profile)
+
+ % be rspec -p 30 spec/acceptance
+ (snip)
+
+ Top 30 slowest example groups:
+   foo
+       9.92 seconds average (19.84 seconds / 2 examples) ./spec/features/foo/hoge.feature:5
+   bar
+       8.32 seconds average (16.64 seconds / 2 examples) ./spec/features/bar/hoge.feature:5
+   baz
+       7.28 seconds average (21.85 seconds / 3 examples) ./spec/features/baz/hoge.feature:4
+  ...
+
+オリコンチャート的な。
+
+# https://www.netguru.co/blog/9-ways-to-speed-up-your-rspec-tests
+
+= sleepを取り締まる
+
+* grep sleep . | wc -l で見つかった件数以上の待ち時間が発生
+  * スローの原因場所は見つけやすい
+* JavaScriptの関わるE2Eテストでの遭遇率高い
+* 1秒もsleepするならDBに状態を問い合わせた方が速い
+
+= DRY
+
+* テストの重複を消す
+* コピペによる迷宮入り
+* コードを書いた時点でないと見つけることが現実的には困難？
+  * Code Climate的な静的解析で手掛かりを見つけたりできる？
+  * 知見を知りたい
+
+= 断捨離
+
+* 使われていないテスト (と呼び出される不要な) コードを捨てる
+* 足し算より引き算の方が難しい
+* コードを捨てることができて一人前
+
+= 最適化
+
+* before(:all), before(:each), aggregate_failures あたりの最適化
+* 毎回の初期化が必要かどうかは一考の余地有り
+* 最近は 1 example(it,specify) で 1 テストケースよりも速度重視に思考が変わってきた
+
+= できるだけインメモリ
+
+* 不要な AR オブジェクト作らない (factory で関連作らず nil にしておく)
+* DB にアクセスさせない (FactoryGirl.create -> build)
+
+= system 呼び出さない
+
+* 他のテストで担保している遅い外部コマンド (ImageMagick) をスタブ化するなど
+
+= 無駄な処理
+
+* サムネイル作らない
+
+= 付録
+
+= 対象絞り込み
+
+* 変更と関係のあるテストだけ実行するという選択肢
+* タグ(rspec --tag)で対象のテストを絞る
+  * ただし全テストを見たいCIの前段まで
+
+= ci skip
+
+* rails/railsはじめ常套手段
+* コメント修正といったレビューをパスすれば良いだけのものはテストしない
+  * CI の設定
+* ci skip / CI SKIP / skip ci / SKIP CI いずれでも受入れるようにしておくと良い
+
+= To be continued...
+
+* スローテスト刑事 (デカ) の捜査は続く
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= Dying Message
+
+* 札束で殴る
+* 潤沢な金と権力
+* お金がんばれ
