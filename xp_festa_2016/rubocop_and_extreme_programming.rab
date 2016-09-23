@@ -1,0 +1,487 @@
+= RuboCopとXPコーディング規約
+
+: content-source
+  XP祭り 2016
+: place
+  早稲田大学 西早稲田キャンパス
+: date
+  2016-09-24 (Sat)
+: author
+  伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= わたし
+
+(株)永和システムマネジメントで働くシニアリーダー。Rubyとかメタルなんかが好きです lml lml
+
+* https://github.com/koic
+* https://twitter.com/koic
+* https://koic.hatenablog.com
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= はじめに
+
+= XPの中心となる活動
+
+  # blockquote
+  # title = エクストリームプログラミング 1st 序文
+  XPはコーディングをソフトウェアプロジェクトのキーアクティビティ、つまり「中心となる活動」として選んでいる。
+
+= 今日の話
+
+  # image
+  # src = images/twitter.png
+  # relative_height = 100
+
+# https://twitter.com/koic/status/776786328948056064
+
+= 今日の話
+
+  * XPオリジナルプラクティスのひとつ『コーディング規約』
+  * もともと予定していた『スローテスト刑事 (デカ) 』は先週、京都で使っちゃいました
+    * http://www.slideshare.net/koic/slow-test-cop
+  * デカシリーズ第2弾(RuboCop)
+
+= Keywords
+
+  * Coding standard
+  * RuboCop
+  * XP and Community
+
+= Coding standard
+
+  * オリジナルXPのプラクティスの1つでもある
+
+= Coding standard
+
+  * 読み手の負担を減らすリーダブルなコードに近づける
+  * PRレビューなどのコードリーディング時につまらないところで引っ掛かりたくない
+  * チームメンバーのコードを似たようなコードに近づける要素
+
+= ツールによる自動化
+
+  * RubyではRuboCopというGemが有名
+    * github.com/bbatsov/rubocop
+
+= RuboCopのチーム活用例
+
+  * CI で RSpec と RuboCop の実行結果をビルド結果とする
+  * PR に対して RuboCop でコメントを付ける
+
+= RuboCop
+
+  * 正直あまり好きではなかったが次のひと言との出会いで考え方が変わった
+
+= @onk says
+
+  # image
+  # src = images/problem_vs_us.png
+  # relative_height = 100
+
+# https://twitter.com/onk/status/230055850516045824
+
+= Yep!
+
+= 現場のRuboCop
+
+  * デフォルトの設定では取り締まりが厳しすぎることからカスタマイズされて使われたりする
+  * 有名な onk/onkcop
+  * inspired by onkcop の esminc/deka_eiwakun
+
+= @onk says
+
+  # blockquote
+  お互いに良いコーディング規約があれば本家に提案しよう
+
+= 原初のXPをふりかえる
+
+  # blockquote
+  # title = エクストリームプログラミング 1st 序文
+  XPは常識を原理とし、極限まで実践するからである。
+
+= eXtreme例 (XPE1stより)
+
+  * コードレビューがよいのであれば、いつでもコードレビューを行う
+  * テストが良いのであれば、全員がいつでもテストをして、顧客もテストを行う
+  * 設計がよいのであれば、設計を全員の日常の仕事の一部にする
+
+= ツマミをフルボリュームに
+
+良いコーディング規約なのであれば、upstreamにそのコーディング規約を提案する。
+
+= upstream への PR
+
+  # image
+  # src = images/rubocop_pr_3500.png
+  # relative_height = 100
+
+# https://github.com/bbatsov/rubocop/pull/3500
+
+= PRの概要
+
+  * Cop/Performance族
+  * コーディング規約の中でも割と有益性が明確な分野だと思っている
+  * sort { ... } から sort_by { ... } にするよう取り締まる
+
+= sortとsort_byおさらい
+
+  * 安定なソートかそうでないか
+    * ggr
+  * ((*パフォーマンスの違い*))
+    * 今回提案したい観点
+  * Cop/Performanceへの提案のためベンチマークを付けたい
+
+= Enumerable#sort ブロックなし(参考)
+
+# http://ruby-doc.org/core-2.3.1/Enumerable.html#method-i-sort
+
+  # coderay ruby
+  require 'benchmark'
+
+  a = (1..100000).map { rand(100000) }
+
+  Benchmark.bm(10) do |b|
+    b.report('sort')    { a.sort }
+    b.report('sort_by') { a.sort_by { |a| a } }
+  end
+
+= Produces:
+
+  # coderay sh
+                   user     system      total        real
+  sort         0.020000   0.000000   0.020000 (  0.018341)
+  sort_by      0.090000   0.000000   0.090000 (  0.087671)
+
+(('note:sort_by { |a| a } ブロックありのときは sort の方が速い。'))
+
+= Enumerable#sort ブロックあり (今回用)
+
+  # coderay ruby
+  require 'benchmark'
+
+  a = (1..100000).map { rand(100000) }
+
+  Benchmark.bm(10) do |b|
+    b.report('sort')    { a.sort { |a, b| a.to_s <=> b.to_s } }
+    b.report('sort_by') { a.sort_by(&:to_s) }
+  end
+
+= Produces:
+
+  # coderay sh
+                   user     system      total        real
+  sort         0.570000   0.000000   0.570000 (  0.571723)
+  sort_by      0.130000   0.000000   0.130000 (  0.129793)
+
+(('note:sort { |a, b| a.to_s <=> b.to_s } ブロックありのときは sort_by(&:to_s) の方が速い。'))
+
+= 以上を背景にcopで指摘したい事
+
+= 指摘を埋め込んだコード
+
+  # coderay ruby
+  % cat test.rb
+  # frozen_string_literal: true
+
+  array = [1, 2, 3]
+
+  array.sort { |a, b| a.to_s <=> b.to_s }
+
+= こう指摘したい
+
+  # coderay ruby
+  % rubocop test.rb
+  Inspecting 1 file
+  C
+
+  Offenses:
+
+  test.rb:5:7: C: Use sort_by(&:to_s) instead of sort { |a, b| a.to_s <=> b.to_s }.
+  array.sort { |a, b| a.to_s <=> b.to_s }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  1 file inspected, 1 offense detected
+
+= プログラマーなので
+
+既存のcopにないので新たなcopを作ってみた。
+
+= 新たなcop作り方概要
+
+copで取り締まるASTを宣言し、ASTの走査イベントについて、Copサブクラスを作って書く
+
+  # coderay ruby
+  class SortWithBlock < Cop
+    ... # これから説明する
+  end
+
+= PRまでのざっくりした流れ
+
+(1) 既存の類似コードを読む
+(2) テストコード(RSpec)を書く
+(3) whitequark/parserでAST(抽象構文木)を作る
+(4) ASTに対するイベントを書く
+(5) autocorrectを書く
+(5) .travisを元に全ビルドを実施
+
+= 1.類似のコードを読む
+
+= 類似のコードを読む
+
+  * 割りとコードがドキュメント
+  * コードリーディングによる静的解析とbinding.pryによる動的解析の2軸が自分の基本
+  * 今回はCop/Performance/RedundantSortByが目的に近い既存コード
+    * 目的に近いコードがあると楽
+
+# http://www.rubydoc.info/github/bbatsov/RuboCop/RuboCop/Cop/Performance/RedundantSortBy
+
+= 2.テストコードを書く
+
+= 実装をよく分かっていないからこそレッドバーから始める
+
+  # coderay ruby
+  describe RuboCop::Cop::Performance::SortWithBlock do
+    subject(:cop) { described_class.new }
+
+    it 'autocorrects array.sort { |a, b| a.foo <=> b.foo }' do
+      new_source =
+        autocorrect_source(cop, 'array.sort { |a, b| a.foo <=> b.foo }')
+      expect(new_source).to eq 'array.sort_by(&:foo)'
+    end
+
+(('note:三角測量が足りずハードコーディングが残っていたのでテストを足して直す指摘をPRコメントでもらって直したりした。'))
+
+= 3.parserでASTを作る
+
+= RuboCopが使うParser
+
+github.com/whitequark/parser
+
+  % gem install parser
+
+* gemspecを眺めて良く知らないライブラリは軽く使ってみる
+
+= 既存のASTを作って学習
+
+目的に近いredundant_sort_by.rbにあるASTを再現させてみる。
+
+  # coderay ruby
+  % ruby-parse -e 'sort_by { |v| v }'
+  (block
+    (send nil :sort_by)
+    (args
+      (arg :v))
+    (lvar :v))
+
+= 参考: S式より馴染む？
+
+  # image
+  # src = images/ast_of_sort_by.png
+  # relative_height = 100
+
+= 今回作りたいASTを作る
+
+  # coderay ruby
+  % ruby-parse -e 'sort { |a, b| a.foo <=> b.foo }'
+  (block
+    (send nil :sort)
+    (args
+      (arg :a)
+      (arg :b))
+    (send
+      (send
+        (lvar :a) :foo) :<=>
+      (send
+        (lvar :b) :foo)))
+
+= 今回のcopのASTへの実装
+
+  # coderay ruby
+  def_node_matcher :sort, <<-END
+    (block
+      $(send _ :sort)
+      (args
+        (arg $_a)
+        (arg $_b))
+      (send
+        (send
+          (lvar _a) $_m) :<=>
+        (send
+          (lvar _b) $_m)))
+  END
+
+= 参考: S式より馴染む？
+
+  # image
+  # src = images/ast_of_sort.png
+  # relative_height = 100
+
+= RuboCopのNodeについて
+
+  * lib/rubocop/ast_node.rbなど読んでた
+
+  # coderay ruby
+  507:           :gvar, :int, :ivar, :lvar, :nil, :str, :sym, :true, :regopt
+
+= 4.ASTに対するイベントを書く
+
+= on_xxx メソッド
+
+  * メタプログラミングで実装されている
+  * lib/rubocop/ast_node/traversal.rbなど読んでた
+
+  # coderay ruby
+  13:        send(:"on_#{node.type}", node)
+  18:                           :rational, :str, :sym, :regopt, :self, :lvar,
+
+= 取り締まりについて書く
+
+対象のASTに取り締まり対象が見つかったらoffernseに追加する。
+
+  # coderay ruby
+  def on_block(node)
+    sort(node) do |send, var_a, var_b, method|
+      range = sort_range(send, node)
+      add_offense(node, range,
+        format(MSG, method, var_a, var_b,
+               var_a, method, var_b, method))
+    end
+  end
+
+= 5. autocorrectを書く
+
+  * RuboCopには自動修正する--auto-correctというオプションがある
+
+= 指摘を埋め込んだコード
+
+  # coderay ruby
+  % cat test.rb
+  # frozen_string_literal: true
+
+  array = [1, 2, 3]
+
+  array.sort { |a, b| a.to_s <=> b.to_s }
+
+= rubocop --auto-correct オプションを付けて実行する
+
+  # coderay ruby
+  % rubocop --auto-correct test.rb
+  Inspecting 1 file
+  C
+
+  Offenses:
+
+  test.rb:5:7: C: [Corrected] Use sort_by(&:to_s) instead of sort { |a, b| a.to_s <=> b.to_s }.
+  array.sort { |a, b| a.to_s <=> b.to_s }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  1 file inspected, 1 offense detected, 1 offense corrected
+
+= autocorrectの差分結果
+
+自動修正される。
+
+  # coderay diff
+  % git diff
+  # frozen_string_literal: true
+
+  array = [1, 2, 3]
+
+  - array.sort { |a, b| a.to_s <=> b.to_s }
+  + array.sort_by(&:to_s)
+
+= RuboCop::Node
+
+node.children.last.children.last.children.lastへの苦渋。
+
+  # image
+  # src = images/making_new_cop.png
+  # relative_height = 100
+
+= autocorrectの実装
+
+method名をASTから引っ張ってくるところに苦渋の後が見える。
+
+  # coderay ruby
+  def autocorrect(node)
+    send, = *node
+
+    lambda do |corrector|
+      method = node.children.last.children.last.children.last
+      corrector.replace(sort_range(send, node), "sort_by(&:#{method})")
+    end
+  end
+
+= 6.travisを元に全ビルドを実施
+
+= .travis重要
+
+RuboCop自体がRuboCopで取り締まられている。
+
+ script:
+   - bundle exec rspec
+   - bundle exec rubocop
+
+= PR前に全ビルドを実施
+
+  * project_spec.rbよく出来てる
+    * デフォルトの取り締まりとなるconfig/enabled.ymlへの設定記述がなくてエラー
+    * CHANGELOG.mdのリンクが不足していてエラー
+  * Line is too long.の取り締まりが厳しくてつらい
+
+= 問題点を指摘してもらったうえで
+
+= めでたく即日マージされた
+
+  # image
+  # src = images/pr_comments.png
+  # relative_height = 100
+
+= onkcop作者より
+
+= XPE2nd 24章『XPとコミュニティ』
+
+  # image
+  # src = images/xpe2nd_chap24.png
+  # relative_height = 90
+
+# https://twitter.com/onk/status/776795790534594560
+
+= XPの中心となる活動
+
+  # blockquote
+  # title = エクストリームプログラミング 1st 序文
+  XPはコーディングをソフトウェアプロジェクトのキーアクティビティ、つまり「中心となる活動」として選んでいる。
+
+= Programmingを中心に
+
+  * Aが良いならAをeXtremeに...
+  * Bが良いならBをeXtremeに...
+  * Cが良いならCをeXtremeに...
+
+= コーディング規約が良いなら
+
+  # blockquote
+  お互いに良いコーディング規約があれば本家に提案しよう
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
