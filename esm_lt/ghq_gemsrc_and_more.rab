@@ -142,7 +142,7 @@ Go言語で作られており、以下のコマンドでインストールでき
 
   * gem installするライブラリをgit cloneしてくれる
   * 内部的にはGem.post_installに引っ掛けている
-  * ghqの指定があればgit cloenでなくghq getする ((*←本題*))
+  * ghqの指定があればgit cloneでなくghq getする ((*←本題*))
 
 = gem-srcのインストール(1)
 
