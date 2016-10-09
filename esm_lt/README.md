@@ -2,7 +2,7 @@
 
 ESM LTでのLTスライド。
 
-FIXME
+http://www.slideshare.net/koic/ghq-gemsrc-andmore
 
 ## 作者向け
 
