@@ -1,0 +1,300 @@
+= ghq, gem-src and more
+
+: content-source
+  esm LT
+: place
+  ESM 神田オフィス
+: date
+  2016-10-04 (Fri)
+: author
+  伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= 開発環境シリーズ第2弾
+
+  * 『開発時の探し物を楽にする習慣作り』＠ninirbの続編
+
+(('note:http://www.slideshare.net/koic/extreme-laziness'))
+
+= 今日の話
+
+  * iTerm2 内での生活
+  * 私の (Rubyの) 開発環境
+    * https://github.com/koic/dotfiles
+  * 旅の途中
+
+= いまの装備
+
+  * Emacs
+    * 複数Emacsを起動する人にはemacsclientがオススメ
+  * zsh
+    * やっぱり補完が便利
+  * screen
+    * tmuxに移るモチベが出ないマン
+
+= 話の核
+
+  # blockquote
+  # title = DRECOM様と合同勉強会を開催しました
+  ghqとamatsuda/gem-srcは開発環境として組み込んでおくべき
+
+# (('note:http://agile.esm.co.jp/news/2016-02-03-drecom-esm-extreme-fish-bowl.html'))
+
+* リポジトリのマネジメントの話
+
+= 2年前のあんちぽさんによるまとめが秀逸
+
+http://blog.kentarok.org/entry/2014/06/03/135300
+
+= ここ数ヶ月で数人に話したので改めて取り挙てみます
+
+= ghq
+
+= 不確かな検索
+
+  # image
+  # src = images/google_ghq.png
+  # relative_height = 100
+
+= No!
+
+= より確かな検索
+
+  # image
+  # src = images/google_ghq_github.png
+  # relative_height = 100
+
+= About ghq
+
+  * リモートリポジトリからcloneしたローカルリポジトリをいい感じに管理する
+
+= ghqのインストール(1)
+
+Go言語で作られており、以下のコマンドでインストールできる。
+
+  # coderay sh
+  % go get github.com/motemen/ghq
+
+= ghqのインストール(2)
+
+~/.gitconfigにghqのrootディレクトリを指定する。
+
+  # coderay sh
+  [ghq]
+      root = ~/src
+
+(('note:任意の指定が可能ですが、以降~/srcとして話を進めます。'))
+
+= ghq getによるclone
+
+  * ((*git cloneではなくghq get*))を使う
+
+  # image
+  # src = images/ghq_get.png
+  # relative_height = 55
+
+= ソースコードの管理
+
+  * ((*git cloneではなくghq get*))を使う(大事なことなので)
+  * ghq look, ghq listなどghqコマンドを通してリポジトリ確認できる
+  * Go言語のディレクトリレイアウトで管理される
+
+= ghqのレイアウト
+
+  * github.com/user/repoという形式で保存される(GHEにも対応)
+  * originのuser, URLが明確
+
+  # coderay sh
+  ~/src
+  ├── github.com
+  │   ├── koic
+  │   │   └── active_pstore
+  │   ├── t-kunou
+  │   │   └── clojure_like_threading_macro
+
+= ghq以前とレイアウト違うよ
+
+  * ghq以前は~/src直下にgit cloneしていた
+  * さすがにリポジトリ量が多いのでghqのレイアウトに移行するスクリプトを書いた
+  * ((*発表の最後にプレゼント*))
+    * 今月のgem
+
+= gem-src
+
+= About gem-src
+
+  * gem installするライブラリをgit cloneしてくれる
+  * 内部的にはGem.post_installに引っ掛けている
+  * ghqの指定があればgit cloenでなくghq getする ((*←本題*))
+
+= gem-srcのインストール(1)
+
+rbenvを使っているのであればgemでのインストールでなく((*rbenvプラギンとしてインスコ*))。
+
+  # coderay sh
+  % git clone https://github.com/amatsuda/gem-src.git ~/.rbenv/plugins/gem-src
+
+= gem-srcのインストール(2)
+
+  # coderay sh
+  % mkdir ~/src
+  % echo "gemsrc_use_ghq: ~/src" >> ~/.gemrc
+
+* ghq get先のディレクトリ作成
+* .gemrcにgemsrc_clone_rootでなくgemsrc_use_ghqを指定することでghqと連動
+  * 環境変数GEMSRC_USE_GHQでも可
+
+= gem-src導入gem install
+
+  # image
+  # src = images/gem_install_rubicure.png
+  # relative_height = 90
+
+(('note:ローカルになければcloneしたのをお分かり頂けるでしょうか'))
+
+= ghqとgem-src
+
+  * 動かしているRailsアプリなんかの依存gemリポジトリがghq get済みの状態になってる
+
+= ここまでが基本
+
+= Advanced story
+
+  * peco
+  * enhancd
+  * hub
+  * Emacs
+  * プレゼント発表 (今月のgem)
+
+= pecoでフィルタリング
+
+  * ghqによってディレクトリ階層は深くなる
+  * gem-srcによってローカルリポジトリ数はそれなりに多くなる
+
+  # coderay sh
+  % ghq list | wc -l
+     763
+
+= ghq + peco
+
+  * ghq管理下のローカルリポジトリにフィルタリング移動する
+
+  # coderay sh
+  alias ghqlist='cd $(ghq list -p | peco)'
+
+(('note:ghqlistという名前は長いのでいい感じにしたい'))
+
+= ghq + peco
+
+  # image
+  # src = images/peco.png
+  # relative_height = 95
+
+= enhancdのオプション
+
+enhancdを使っているのであれば -gオプションで同様の事が可能。
+
+  # coderay sh
+  cd -g
+
+* enhancdはライフチェンジツールでオススメ
+
+(('note:https://github.com/b4b4r07/enhancd'))
+
+= ghq + peco + hub
+
+  * ghq管理下のリモートリポジトリのGitHubをブラウザ表示する
+  * ghqとpecoに加えてhubを足す
+
+  # coderay sh
+  alias ghqhub='hub browse $(ghq list | peco | cut -d "/" -f 2,3)'
+
+= Emacs + ghq
+
+El-Getでのインストール。
+
+  # coderay sh
+  M-x el-get-install RET helm-ghq
+
+M-x helm-ghq でいつものhelmを使ってリポジトリ移動。
+
+= ghqへの移行
+
+ghqのディレクトリレイアウトへの移行がめんどくさいよという人たちのために((*ghq_transfer*))というgemを用意しておいた。
+
+= プレゼント発表(今月のgem)
+
+  * ghq_transfer
+    * git clone時代のリポジトリをghqレイアウトに移行するコマンドを提供
+  * 視聴者に限らずMITライセンスでプレゼント
+
+= インストール
+
+gemなんかでインストールできる。
+
+  # coderay sh
+  gem install ghq_transfer
+
+= 2つのモード
+
+  * ghq_transfer --dry-run で dry run 実行
+  * ghq_transfer --valth で本実行
+
+= 利用上の注意
+
+  # image
+  # src = images/valth.png
+  # relative_height = 80
+
+dry runで確認してからvalthする
+
+= ghq get以前のgit clone
+
+  # coderay sh
+  % git clone /Users/koic/src/github.com/fkino/abetterteam ~/src/abetterteam
+  Cloning into '/Users/koic/src/abetterteam'...
+  done.
+  %ls /Users/koic/src/abetterteam
+  abetterteam.rb config.ru      public         quiz.yml       spec           views
+
+* ~/src直下にabetterteamがある
+
+= ghq_transferでghq構成へ
+
+  # coderay sh
+  % ghq_transfer  --dry-run
+  *** dry run ***
+  /Users/koic/src/abetterteam -> /Users/koic/src/github.com/fkino/abetterteam
+  % ghq_transfer  --valth
+  *** valth!! ***
+  /Users/koic/src/abetterteam -> /Users/koic/src/github.com/fkino/abetterteam
+  %ls /Users/koic/src/github.com/fkino/abetterteam
+  abetterteam.rb config.ru      public         quiz.yml       spec           views
+
+* ~/src/github.com/user/repoというghq構成に移行できる
+* GHEにも対応してるつもり
+
+= まとめ
+
+  * ghqとgem-srcについて話した
+  * bundle installしたgemについて統一した管理が手元でできる
+  * 使っている依存gemに何かあれば潜る、壊れていたら(なんらかの形で)直すという流れの準備ができている。べんり。
+
+= Happy Repository Management
