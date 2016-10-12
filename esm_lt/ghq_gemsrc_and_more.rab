@@ -209,7 +209,7 @@ rbenvを使っているのであればgemでのインストールでなく((*rbe
 
 = enhancdのオプション
 
-enhancdを使っているのであれば -gオプションで同様の事が可能。
+enhancdを使っているのであれば -gオプションで類似の事が可能。
 
   # coderay sh
   cd -g
