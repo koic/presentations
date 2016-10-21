@@ -1,4 +1,4 @@
-# ghq, gem-src and peco
+# ghq, gem-src and more
 
 ESM LTでのLTスライド。
 
