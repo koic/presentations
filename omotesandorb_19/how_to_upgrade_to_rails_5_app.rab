@@ -1,0 +1,263 @@
+= Ruby 2.4 / Rails 5.0に上げた際のパッチ5選
+
+: content-source
+  表参道.rb #19
+: place
+  Sansan株式会社
+: date
+  2017-02-02 (Thu)
+: author
+  伊藤 浩一 (@koic)
+: institution
+   (株)永和システムマネジメント
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= わたし
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+# = わたし
+#
+# * (株)永和システムマネジメント シニアリーダー
+# * 採用、育成、新卒氏のメンター
+# * プロジェクトリーダー兼リリースマネージャー
+# * モンキーパッチのupstream還元
+
+= 今日の話
+
+* アプリケーションコードは巨人の肩に乗った氷山の一角
+* "Gemfile.lock に記されているコードはプロジェクトのコードとしてメンテナンス対象である"
+
+= まとめ
+
+アップグレードの道のりは1年前にははじまっている
+
+= アップグレードへの症状例
+
+* 分かりやすいのは、そもそも rails server が起動しない
+* 自動テストをパスしない
+* アップグレードすれば噛み合わせの悪いライブラリは出てきたりする
+
+= upstreamへの還元5選
+
+* bkeepers/dotenv#251
+* cowboyd/therubyracer#413
+* rsim/oracle-enhanced#1084
+* kubo/ruby-oci8#144
+* sferik/rails_admin#2789
+# * https://github.com/sferik/rails_admin/pull/2810 Loosen the dependency version of Kaminari (1.0.0)
+
+= 2016年3月
+
+* https://github.com/bkeepers/dotenv/pull/251
+* Fix a failure spec in ruby 2.4.0dev
+
+= diff
+
+  # coderay diff
+  class Parser
+    @substitutions =
+  -    Substitutions.constants.map { |const| Substitutions.const_get(const) }
+  +    [Dotenv::Substitutions::Variable, Dotenv::Substitutions::Command]
+
+    LINE = /
+
+= 期待する振る舞いが分からない
+
+https://bugs.ruby-lang.org/issues/12121 で問い合わせ
+
+= 最小ケースの作成
+
+  # coderay ruby
+  module M1
+    module A end
+  end
+
+  module M2
+    module B end
+
+    module A end
+  end
+
+= 結果
+
+* Ruby 2.3.0 ... p M2.constants # => [:B, :A]
+* Ruby 2.4.0 ... p M2.constants # => [:A, :B]
+
+= 回答から抜粋
+
+  # blockquote
+  これは、ドキュメントの問題だと思います。Module#constantsの戻り順を保障したことはないし、これからも保障されないと思います。今回は高速化の一環として順序が変わりましたが、今後も同様のことは起き得ます。
+
+= どういうことだったか?
+
+* 値を割り当ててから実行という流れが、値を割り当てる前に実行になってエラー
+* Module#constants の戻り値の順序が変わっていた
+* 仕様 (高速化の一環で順序が変わったが、そもそも順序の保証はない)
+
+
+= 2016年5月
+
+* https://github.com/cowboyd/therubyracer/pull/413
+* Support for unified Integer class in Ruby 2.4+
+
+= diff
+
+  # coderay diff
+  - for type in [Class, Object, Array, Hash, String, Symbol, Time, Proc, Method, Fixnum] do
+  + for type in [Class, Object, Array, Hash, String, Symbol, Time, Proc, Method, Integer] do
+      type.class_eval do
+        include V8::Conversion.const_get(type.name)
+      end
+    end
+
+= どういうものだったか？
+
+* Ruby 2.4 では Fixnum => Integer となり、Integer に対応する module がなくてエラー。
+* 2017年1月にリリースされた。
+
+= 2016年12月
+
+* https://github.com/rsim/oracle-enhanced/pull/1084
+* Fix ORA-00933 error when executing `rails db:schema:load`
+
+= diff (1)
+
+  # coderay diff
+  def supports_multi_insert?
+  - false
+  + @connection.database_version.to_s >= [11, 2].to_s
+  end
+
+= diff (2)
+
+  # coderay diff
+    def insert_versions_sql(versions) # :nodoc:
+  -   sm_table = ActiveRecord::Migrator.schema_migrations_table_name
+  +   sm_table = quote_table_name(ActiveRecord::Migrator.schema_migrations_table_name)
+
+  -   versions.map { |version|
+  -     "INSERT INTO #{sm_table} (version) VALUES ('#{version}')"
+  -   }.join "\n\n/\n\n"
+  +   if supports_multi_insert?
+  +     versions.inject("INSERT ALL\n") { |sql, version|
+  +       sql << "INTO #{sm_table} (version) VALUES (#{quote(version)})\n"
+  +     } << "SELECT * FROM DUAL\n"
+  +   else
+  +     if versions.is_a?(Array)
+  +       # called from ActiveRecord::Base.connection#dump_schema_information
+  +       versions.map { |version|
+  +         "INSERT INTO #{sm_table} (version) VALUES (#{quote(version)})"
+  +       }.join("\n\n/\n\n")
+  +     else
+  +       # called from ActiveRecord::Base.connection#assume_migrated_upto_version
+  +       "INSERT INTO #{sm_table} (version) VALUES (#{quote(versions)})"
+  +     end
+  +   end
+    end
+
+= どういうものだったか？
+
+* `rails db:migrate` だと積み重ねただけのマイグレーションが実行されて遅い
+* db/schema.rb を共有して、`rails db:schema:load` 実行 (テスト/CI環境)
+* Rails 5 で導入されたマルチインサート対応が必要で `rails db:schema:load` でエラー
+
+= 2016年12月
+
+* https://github.com/kubo/ruby-oci8/pull/144
+* Fix invalid value for BigDecimal in Ruby 2.4.0+
+
+= diff
+
+違いが分かりますか？
+
+ # coderay diff
+   {
+       char buf[64];
+       ub4 buf_size = sizeof(buf);
+  -    const char *fmt = "FM9.99999999999999999999999999999999999999EEEE";
+  +    const char *fmt = "FM9.09999999999999999999999999999999999999EEEE";
+
+       if (!cBigDecimal) {
+           rb_require("bigdecimal");
+
+= どういうものだったか？
+
+* `rake spec` を実行してエラーになった？ (記憶がおぼろ)
+* Ruby 2.3 でパスしていた 1.E+00 という値が、Ruby 2.4 だとパスしなかった
+* 仕様が分からないので、ruby/decimal に ISSUE を書いて回答をもらう
+
+# = 裏付けを取った上でパッチを出す
+
+= 2016年12月
+
+* https://github.com/sferik/rails_admin/pull/2789
+* Fix #encoding error by oracle_enhanced
+* @ojiryメンバーによるパッチ
+
+= diff
+
+  # coderay diff
+    def encoding
+      case ::ActiveRecord::Base.connection_config[:adapter]
+      when 'postgresql'
+        ::ActiveRecord::Base.connection.select_one("SELECT ''::text AS str;").values.first.encoding
+      when 'mysql2'
+        ::ActiveRecord::Base.connection.instance_variable_get(:@connection).encoding
+  +   when 'oracle_enhanced'
+  +     ::ActiveRecord::Base.connection.select_one("SELECT dummy FROM DUAL").values.first.encoding
+      else
+        ::ActiveRecord::Base.connection.select_one("SELECT '' AS str;").values.first.encoding
+      end
+
+= どういうものだったか？
+
+* PostgreSQL / MySQL / SQLite (?) でない RDBMS は別途対応が必要だった
+* PR を見てもらうサポートをする
+* リポジトリの所有者よりも最近マージボタンを押すような活動しているコミッターにメンションする
+
+= まだ時間はありますね？
+
+= Kaminari 1.0.0
+
+* https://github.com/sferik/rails_admin/pull/2810
+* Loosen the dependency version of Kaminari (1.0.0)
+
+= diff
+
+ # coderay diff
+     spec.add_dependency 'jquery-rails', ['>= 3.0', '< 5']
+     spec.add_dependency 'jquery-ui-rails', '~> 5.0'
+  -  spec.add_dependency 'kaminari', '~> 0.14'
+  +  spec.add_dependency 'kaminari', '>= 0.14', '< 2.0'
+     spec.add_dependency 'nested_form', '~> 0.3'
+     spec.add_dependency 'rack-pjax', '>= 0.7'
+
+= どういうものだったか？
+
+* gemspec での縛りを緩めて、CI 用に Gemfile での縛りを作るお仕事
+
+= Conclusion
+
+# * コードを中心にコミュニケーションをとるのが我々のコミュニティである
+# * パッチを送っているとコミュニティの中の人というのが分かるようになってくる
+* kamipo名言 "困ってる人がいる問題が直るのではなく直す気のある人がいる問題が直る"
+* (汎用的なフレームワークは難しくても) 特化されたアプリケーション起点でのエラーなら分かりやすい
+* 多人数が数年に渡って関わるようなアプリケーションでは特にアップグレード重要
+
+= Values
+
+* 最新の安定版 Rails に速く乗る
+* 自信を持ってプロジェクト(への加入)を進められる
+* 新しいバージョンを使うことで EOL に出会わずにすむ
+* "Ruby はバージョンを上げるだけで速くなる"
+* No hate
+
+= まとめ
+
+アップグレードの道のりは1年前にははじまっている
