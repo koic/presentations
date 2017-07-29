@@ -1,0 +1,219 @@
+= アプリがパッチにまみれたら
+
+: content-source
+  TokyuRuby会議11
+: date
+  2017-07-29 (Sat)
+: author
+  伊藤 浩一 (@koic)
+: allotted-time
+  5m
+: theme
+  lightning-clear-blue
+
+= ((' '))
+
+  # image
+  # src = images/profile.png
+  # relative_height = 100
+
+= ((' '))
+
+  # image
+  # src = images/oracle_enhanced_adapter.png
+  # relative_height = 100
+
+= ((' '))
+
+  # image
+  # src = images/rails_contributors.png
+  # relative_height = 100
+
+= ((' '))
+
+  # image
+  # src = images/ruby_kaigi_2017.png
+  # relative_height = 100
+
+= ドリンクアップスポンサー
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= ティルックラル 第391篇
+
+  # blockquote
+  学ぶ価値のある知識はすべて学べ学んだ知恵を生かして行動せよ
+
+= 今日の話
+
+= rails new 以降はパッチ
+
+= パッチいろいろ
+
+* 機能拡張
+* バグ修正
+* パフォーマンス改善
+* 依存Gemのアップグレード
+* リファクタリング
+* 機能削除
+
+= 結論
+
+= 良いパッチにまみれれば幸い、悪いパッチにまみれたら辛い。
+
+= 良いパッチと悪いパッチ
+
+= 良いパッチ
+
+* 本質的な問題を解決している
+* 必要最小限でいて拡張の邪魔にならないパッチ
+
+= 悪いパッチ
+
+* その場凌ぎで問題解決している
+* 本質的な問題解決となっておらずしばしば拡張の邪魔になるパッチ
+  * とはいえ問題解決はしているので、度合いの問題ではある
+
+= 今日のお題
+
+= みんな大好きモンキーパッチ
+
+= 課題
+
+= アプリケーションのドメインコードと、フレームワーク/ライブラリの汎用コードが同一リポジトリに混在する
+
+= 分けよう
+
+= 本来フォーカスする問題領域のみアプリケーションのコードとしてリポジトリにあるべき
+
+= 依存するOSSを含めた観点
+
+= 良いパッチ
+
+* 適切な upstream に対するパッチを送って、本質的な問題解決をする
+* アプリケーションコードに依存Gem特有の問題を混ぜない
+
+= 問題の残るパッチ
+
+* とりあえず手元のアプリケーションが動くワークアラウンド
+* あの時のあのパッチがあればが今のアプリケーションに埋もれたままになるかも
+
+= 天使の助言と悪魔の囁き
+
+* 問題の抽象化やupstream向けのテストを書く手間はある
+  * 往々にして汎化問題より特化問題の方が簡単
+* 「おまえもモンキーパッチにしてやろうか」
+
+= モンキーパッチの止むを得ない場合
+
+* フレームワーク/ライブラリへの抽象化が難しい、本当にアプリケーション特有の問題
+* RailsAdmin での CSV ダウンロードの ShiftJIS 変換とか
+  * あれ？この例パッチ送れるのでは...
+
+= 人間の葛藤
+
+  # image
+  # src = images/agile_practice.png
+  # relative_height = 100
+
+= 悪魔の囁きに敗れた際の対処事例
+
+= bundle updateへ負債対策
+
+  # coderay ruby
+  raise '説明を書く' unless Foo.version == '1.2.3'
+
+* bundle update に注意みたいなコメントではなく、動くコードでの警告にしておく。
+* Gemfileへのバージョン固定にすると固定されて終わる
+
+= Extract Gem
+
+* 外部Gemにして開発サイクルを分ける
+* アプリケーション固有の問題でないので切り出しGemfile 1行にする
+* 事例: https://github.com/koic/oracle-enhanced-monky_patch_755
+
+= Gemfile
+
+  # coderay ruby
+  gem 'activerecord-oracle_enhanced-adapter'
+  gem 'activerecord-oracle_enhanced-adapter-monky_patch_755'
+
+* Rails 4.2.1でタイムゾーンがズレる問題を直すGemのはずが、Rails 5でタイムスタンプ型が変わったことへの対応も入った
+* Oracleでのスキーマ移行を延命できる
+
+= Railsアップグレードとスキーマ
+
+* RDBMSのスキーマの型変更は重い話になりうる
+* Railsアップグレードと異なるタイミングで行なえるようにしたのは悪い判断ではなかった
+
+= 究極の弱点
+
+* activerecord-oracle_enhanced-adapter-monky_patch_755
+* わざとイケてない名前にしたけれど、本当にイケてなくてつらい
+  * 全力でこの名前を消しにかかる
+
+= パッチ戦争からGem戦争へ
+
+= モンキーパッチGemを倒すGem
+
+* https://github.com/koic/screamers
+* oracle-enhanced-monky_patch_755を倒すために誕生した
+* 怨念駆動開発
+
+= screamers:migration
+
+  # coderay sh
+  % bin/rails g screamers:migration date datetime
+        create  db/migrate/20170628144908_change_(略)
+
+* dateからdatetimeに一括変換するマイグレーションファイルを生成する
+
+= 天使界と悪魔界の狭間
+
+= Forked Gem
+
+* upstreamのmasterでは直っているがリリースされていない
+* PRは出しているがコミッターが活動していない
+
+= Rails 5.0.1 + Ruby 2.4
+
+* warning: constant ::Fixnum is deprecated 川が氾濫していた
+* 見たいログが警告に流されて見えない
+* 警告川の氾濫
+
+= Rails 5.0.1で警告を鎮まらせた
+
+  # coderay ruby
+  # Use rails from a branch of koic/rails until rails 5.0.2.
+  gem 'rails', git: 'https://github.com/koic/rails',
+               branch: 'quiet_unified_integer_warn_on_rails_5_0_1'
+
+* rails/railsの5-0-stableからブランチを切って、必要なコミットをmasterからcherry-pick
+* Rails 5.0.2までのあいだ警備していた
+
+= 反応がない。どうしたら...
+
+  # coderay ruby
+  gem 'compass', github: 'nsgc/compass',
+                 branch: 'fix_deprecation_warning'
+
+* パッチはある。反応はない。
+* Gemの選定は大事
+
+= 天使の助言が勝ったとき
+
+= Upstreamに投げる
+
+* Oracleに詳しいわけではないので、DBAに見てもらえる
+* 新しい知識を得ることが出来る
+* パッチ投げていたら、コミッターに推薦してもらえた
+
+= 小さな仕事、大きな成功
+
+* パッチの送り先はアプリケーションに限らない
+* 依存先のupstreamにも出来ることからコツコツと
+* 少しずつ出来ることが増えて行くので、カルマを積み重ねて行きましょう
