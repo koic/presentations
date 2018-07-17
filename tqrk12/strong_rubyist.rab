@@ -1,0 +1,166 @@
+= Strong Rubyist
+
+: content-source
+   TokyuRuby会議12
+: date
+   2018-07-29(Sun)
+: author
+   伊藤 浩一 (@koic) / esm
+: allotted-time
+   5m
+: theme
+   lightning-clear-blue
+
+= 出オチ？
+
+  # blockquote
+  なぜStrongというタイトルなのか？それは、あのStrong Zeroと掛けていると言いたかっただけということは秘密です :-)
+
+= About Me
+
+  # image
+  # src = images/profile.jpg
+  # relative_height = 100
+
+= わたし
+
+  * RuboCopコミッター
+  * Oracle enhanced adapterコミッター
+  * TokyuRuby会議 5期連続選抜
+
+= ((' '))
+
+  # image
+  # src = images/esminc.png
+  # relative_height = 115
+
+= テストの時間です
+
+= いまから表示する数字から連想する内容を思い浮かべて下さい
+
+= 3.14
+
+= 24*365
+
+= 2, 3, 5, 7, 11, 13
+
+= 1007
+
+= 今日のテーマ
+
+= Strong
+
+= 2015年に私が強く影響を受けた3人のロックスター
+
+= @t_wada
+
+= @joker1007
+
+= @amatsuda
+
+= 2015-2018
+
+= 形から入る
+
+= コードとプレゼン
+
+= 3年前のある日
+
+  * お前何が起きたの?
+
+  # image
+  # src = images/my_github_account.png
+  # relative_height = 100
+
+= ((*Light*)) Write Code Every Day
+
+= オリジナルはストイック
+
+  * プラクティスをそのまま適用しても失敗する
+  * 自分の生活スタイルに合わせる
+  * John Resigも記事のルールどおりとするべきとは言っていない
+
+= オリジナルとの主な違い
+
+  * 真夜中でもコードを書く
+    * むしろ本番
+  * リファクタリングもOK
+    * むしろマージコミットだけの日も
+
+= これがむずかしかった
+
+  * 草を生やし続ける習慣づくり
+  * やらない理由はなんとでもできてしまうので、やってみる工夫
+
+= 草を生やし続ける習慣づくり
+
+  * 酒を飲みに行ったあとはダメ
+    * 酒を飲みに行く前にコミットする
+  * 予定のある日の前にパッチ袋を持つ
+    * RuboCopのは先日`rm -rf`の誤操作で消しちゃいましたけどね
+
+= 量は質に転化する
+
+  * GitHubに行く習慣づけができる (人を覚える)
+  * 約1年半後にOracle enhanced adapterのコミッターに推してもらう
+  * 約3年後にRuboCopのコミッターになる
+
+= Presentation
+
+= いろいろと輪が広がる
+
+  * 名刺交換より全然覚えてもらえる
+    * "名刺とかもらっても捨てますけどね" by 某社社長
+
+= まずコードの読み書きから
+
+  * 重い腰をあげた情報整理の機会になる
+  * "Google検索で出てくる情報を書いても価値がない" by ???
+    * e.g. Bundler 2, RuboCop 1.0
+  * ない情報を作る→コードを書く最強
+
+= 日々のコードと掛けあわせると
+
+  * 今年はjokerさんとRubyKaigiスピーカーの同期になれた
+  * おめでとう、ありがとう
+
+= TokyuRuby会議
+
+  # blockquote
+  Rubyというひとことが入って入れば良い「敷居の低い」LT大会
+
+= LTは敷居が低い？
+
+  * 5分打ち切り
+  * 勢いでやれる
+  * ほんと？
+
+= 覇王jokerさん
+
+  # blockquote
+  TokyuでLT王取る方がたいへん
+
+= 相似形
+
+  * Programming Language Ruby
+
+= 緩やかな勾配を描く
+
+  # image
+  # src = images/from-java-to-ruby-in-action-68.png
+  # title = https://www.slideshare.net/kakutani/from-java-to-ruby-in-action/68
+  # relative_height = 100
+
+= From Java to Ruby in Actionより
+
+  # blockquote
+  # title = https://www.slideshare.net/kakutani/from-java-to-ruby-in-action/67
+  初心者には頼もしく、熟練者には頼もしい
+
+  # https://www.slideshare.net/kakutani/from-java-to-ruby-in-action/67
+
+= "We beleve our strength We're one"
+
+  # image
+  # src = images/under_the_force_of_courage.jpeg
+  # relative_height = 100
